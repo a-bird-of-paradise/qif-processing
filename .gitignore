@@ -30,3 +30,14 @@
 *.exe
 *.out
 *.app
+parser
+
+# flex and bison outputs
+location.hh
+Parser.cpp
+Parser.hpp
+Scanner.cpp
+
+# local test files not to be pushed
+*.local.qif
+.vscode/*

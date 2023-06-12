@@ -213,6 +213,7 @@ qif::QifTransaction::QifTransaction(const AST::tree_node& node, const qif::DateP
 {
     if(node.type() == AST::tree_node_type::Record)
     {
+        std::cout << "Making transaction from [" << &node << "]" << std::endl;
         for(const auto& s : node.children())
         {
             if(s->type() == AST::tree_node_type::Field) {
@@ -276,10 +277,14 @@ qif::QifTransactionList::QifTransactionList(const AST::tree_node& node, const qi
     {
         type_ = node.data();
 
-        for(const auto& i: node.children())
-        {
-            collection_.emplace_back(qif::QifTransaction(*i,dp));
-        }
+        std::cout << "Making transaction list [" << type_ << "] from [" << &node << "]" << std::endl;
+
+        if(node.children().size() == 1) // check there's a single child of a list type
+            if(node.children()[0]->type() == AST::tree_node_type::List)
+                for(const auto& i: node.children()[0]->children())
+                {
+                    collection_.emplace_back(qif::QifTransaction(*i,dp));
+                }
 
     }
 }
@@ -342,6 +347,8 @@ qif::QifAccount::QifAccount(const AST::tree_node& node, const qif::DateParser& d
             }
         }
     }
+
+    std::cout << "Constructed account from " << &node << std::endl << *this;
 }
 
 
@@ -437,6 +444,8 @@ std::istream& qif::operator>>(std::istream& is, qif::QifRoot& m)
 
     int result = parser.parse();
 
+    AST::tree_print(*ctx.AST);
+
     if(result == 0) m = std::move(qif::QifRoot(*ctx.AST,*m.dateparser_));
 
     return is;
@@ -484,24 +493,24 @@ qif::QifRoot& qif::QifRoot::operator=(const qif::QifRoot& other)
 {
     if(this != &other)
     {
-        accounts_ = qif::QifList<qif::QifAccount>(other.accounts_);
-        securities_ = qif::QifList<qif::QifSecurity>(other.securities_);
-        categories_ = qif::QifList<qif::QifCategory>(other.categories_);
-        classes_ = qif::QifList<qif::QifClass>(other.classes_);
-        transactions_ = qif::QifTransactionList(other.transactions_);
-        dateparser_ = other.dateparser_->clone();
+        accounts_       = qif::QifList<qif::QifAccount>(other.accounts_)    ;
+        securities_     = qif::QifList<qif::QifSecurity>(other.securities_) ;
+        categories_     = qif::QifList<qif::QifCategory>(other.categories_) ;
+        classes_        = qif::QifList<qif::QifClass>(other.classes_)       ;
+        transactions_   = qif::QifTransactionList(other.transactions_)      ;
+        dateparser_     = other.dateparser_->clone()                        ;
     }
     return *this;
 }
 
 qif::QifRoot& qif::QifRoot::operator=(qif::QifRoot&& other)
 {
-    accounts_ = std::move(other.accounts_);
-    securities_ = std::move(other.securities_);
-    categories_ = std::move(other.categories_);
-    classes_ = std::move(other.classes_);
-    transactions_ = std::move(other.transactions_);
-    dateparser_ = std::move(other.dateparser_);
+    accounts_       = std::move(other.accounts_)    ;
+    securities_     = std::move(other.securities_)  ;
+    categories_     = std::move(other.categories_)  ;
+    classes_        = std::move(other.classes_)     ;
+    transactions_   = std::move(other.transactions_);
+    dateparser_     = std::move(other.dateparser_)  ;
 
     return *this;
 }
